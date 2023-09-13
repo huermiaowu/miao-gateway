@@ -16,3 +16,23 @@ jobs:
       - name: Push Image
         run: |
           docker push huerni/miao-gateway:v1.0
+
+  # Docker 自动部署
+  deploy-docker: 
+    needs: [build]
+    name: Deploy Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }} # 服务器ip
+          username: ${{ secrets.HOST_USERNAME }} # 服务器登录用户名
+          password: ${{ secrets.HOST_PASSWORD }} # 服务器登录密码
+          port: ${{ secrets.HOST_PORT }} # 服务器ssh端口
+          script: |
+            # 切换工作区
+            cd /home/miao/docker-deploy
+            # 更新镜像，启动
+            docker pull huerni/miao-gateway:v1.0
+            docker-compose up -d gateway
