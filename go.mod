@@ -1,4 +1,4 @@
-module gateway
+module github.com/huerni/miao-gateway
 
 go 1.20
 

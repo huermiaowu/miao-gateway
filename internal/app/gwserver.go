@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
-	"gateway/internal/config"
 	"github.com/huerni/gmitex/pkg/etcd"
+	"github.com/huerni/miao-gateway/internal/config"
 	"os"
 	"os/signal"
 	"syscall"

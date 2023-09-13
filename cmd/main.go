@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"gateway/internal/app"
-	"gateway/internal/config"
+	"github.com/huerni/miao-gateway/internal/app"
+	"github.com/huerni/miao-gateway/internal/config"
 )
 
 var configFile = flag.String("f", "etc/cfg.toml", "the config file")
