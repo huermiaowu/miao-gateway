@@ -1,0 +1,115 @@
+version: '3'
+
+services:
+  mysql-master:
+    image: mysql:latest
+    restart: always
+    container_name: miao-mysql-master
+    privileged: true
+    environment:
+      - MYSQL_DATABASE=miao
+      - MYSQL_USER=miao
+      - MYSQL_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD=123456
+    #  - TZ = Asia/Shanghai
+    volumes:
+      - ./pkg/mysql/mysql-master/volumes/conf/my.cnf:/etc/my.cnf
+    command:
+      --default-authentication-plugin=mysql_native_password
+    ports:
+      - 3306:3306
+
+  mysql-slave:
+    image: mysql:latest
+    restart: always
+    container_name: miao-mysql-slave
+    privileged: true
+    environment:
+      - MYSQL_DATABASE=miao
+      - MYSQL_USER=miao
+      - MYSQL_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD=123456
+    #  - TZ = Asia/Shanghai
+    volumes:
+      - ./pkg/mysql/mysql-slave/volumes/conf/my.cnf:/etc/my.cnf
+    command:
+      --default-authentication-plugin=mysql_native_password
+    ports:
+      - 3307:3306
+
+  Etcd:
+    image: 'bitnami/etcd:latest'
+    restart: always
+    container_name: miao-etcd
+    environment:
+      - "ALLOW_NONE_AUTHENTICATION=yes"
+      - "ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379"
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+
+  traefik:
+    image: "traefik:2.10.4"
+    restart: always
+    container_name: miao-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=false"
+      - "--providers.etcd=true"
+      - "--providers.etcd.endpoints=miao-etcd:2379"
+      - "--entrypoints.web.address=:80"
+      - "--metrics.prometheus=true"
+      - "--tracing.jaeger=true"
+      - "--tracing.jaeger.samplingType=\"const\""
+      - "--tracing.jaeger.samplingParam=1.0"
+      - "--tracing.jaeger.localAgentHostPort=miao-jaeger:6831"
+      - "--tracing.jaeger.gen128Bit"
+      - "--tracing.jaeger.propagation=jaeger"
+      - "--tracing.jaeger.samplingServerURL=http://miao-jaeger:5778/miao"
+      - "--tracing.jaeger.collector.endpoint=http://miao-jaeger:14268/api/traces?format=jaeger.thrift"
+      - "--tracing.jaeger.collector.user=miao"
+      - "--tracing.jaeger.collector.password=123456"
+    ports:
+      - "8090:80"
+      - "9090:8080"
+
+  redis:
+    image:  redis:latest
+    restart: always
+    container_name: miao-redis
+    command: redis-server --appendonly yes --requirepass '123456'
+    environment:
+      - TZ=Asia/Shanghai # 设置时区
+    ports:
+      - 6379:6379
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    container_name: miao-prometheus
+    ports:
+      - 9091:9090
+    volumes:
+      - ./pkg/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:8.1.2
+    container_name: miao-grafana
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: miao-jaeger
+    restart: always
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+      - "14268:14268"
+      - "6831:6831/udp"
+      - "5778:5778"
+    environment:
+      - LOG_LEVEL=debug

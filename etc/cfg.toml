@@ -1,0 +1,28 @@
+prefix = "miao"
+
+[etcd]
+hosts = ["127.0.0.1:2379"]
+key = "gateway"
+
+[mysql]
+key = ""
+
+username = "miao"
+password = "123456"
+address = "localhost:3306"
+database = "miao"
+other = "?charset=utf8&parseTime=True&loc=Local"
+
+dsn = ""
+
+[mysql-slave]
+key = ""
+
+username = "miao"
+password = "123456"
+address = "localhost:3306"
+database = "miao"
+other = "?charset=utf8&parseTime=True&loc=Local"
+
+dsn = ""
+
